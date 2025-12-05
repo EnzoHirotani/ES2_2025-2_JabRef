@@ -26,6 +26,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Generate journal-list.mv
+        run: ./gradlew :jablib:generateJournalListMV --no-daemon
+
       - name: Build (assemble + tests)
         run: ./gradlew build --no-daemon --info
         env:
@@ -45,10 +48,10 @@ jobs:
           name: test-reports-${{ matrix.java-version }}
           path: build/reports/tests/**
 
-      - name: Publish JUnit test results (optional)
+      - name: Publish JUnit test results
         if: always()
         uses: dorny/test-reporter@v1
         with:
-          name: 'Gradle Tests'
-          path: build/test-results/test
-          reporter: junit
+          name: 'Gradle Tests (Java ${{ matrix.java-version }})'
+          path: '**/build/test-results/test/TEST-*.xml'
+          reporter: java-junit
