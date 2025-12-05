@@ -15,41 +15,40 @@ import org.jabref.logic.citationkeypattern.CitationKeyPatternPreferences;
 import org.jabref.logic.citationkeypattern.CitationKeyPatternPreferences.KeySuffix;
 import org.jabref.logic.util.TaskExecutor;
 import org.jabref.model.entry.BibEntry;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
-@ExtendWith(MockitoExtension.class)
 public class GenerateCitationKeyActionTest {
 
-    @Mock
     private DialogService dialogService;
-
-    @Mock
     private StateManager stateManager;
-
-    @Mock
     private TaskExecutor taskExecutor;
-
-    @Mock
     private CliPreferences preferences;
-
-    @Mock
     private UndoManager undoManager;
-
-    @Mock
     private LibraryTab libraryTab;
+
+    @BeforeEach
+    void setUp() {
+        dialogService = mock(DialogService.class);
+        stateManager = mock(StateManager.class);
+        taskExecutor = mock(TaskExecutor.class);
+        preferences = mock(CliPreferences.class);
+        undoManager = mock(UndoManager.class);
+        libraryTab = mock(LibraryTab.class);
+    }
 
     @Test
     public void execute_noSelectedEntries_showsWarning() {
-        when(stateManager.getSelectedEntries()).thenReturn(Collections.emptyList());
+        when(stateManager.getSelectedEntries()).thenReturn(FXCollections.observableArrayList());
 
         GenerateCitationKeyAction action = new GenerateCitationKeyAction((Supplier<LibraryTab>) () -> libraryTab,
                 dialogService, stateManager, taskExecutor, preferences, undoManager);
@@ -64,7 +63,7 @@ public class GenerateCitationKeyActionTest {
     public void execute_userDeclinesOverwrite_taskNotExecuted() {
         BibEntry entry = new BibEntry();
         entry.setCitationKey("existing");
-        List<BibEntry> entries = List.of(entry);
+        ObservableList<BibEntry> entries = FXCollections.observableArrayList(entry);
 
         when(stateManager.getSelectedEntries()).thenReturn(entries);
 
@@ -99,7 +98,7 @@ public class GenerateCitationKeyActionTest {
         BibEntry entryWithKey = new BibEntry();
         entryWithKey.setCitationKey("k1");
         BibEntry entryWithoutKey = new BibEntry();
-        List<BibEntry> entries = List.of(entryWithKey, entryWithoutKey);
+        ObservableList<BibEntry> entries = FXCollections.observableArrayList(entryWithoutKey);
 
         when(stateManager.getSelectedEntries()).thenReturn(entries);
 

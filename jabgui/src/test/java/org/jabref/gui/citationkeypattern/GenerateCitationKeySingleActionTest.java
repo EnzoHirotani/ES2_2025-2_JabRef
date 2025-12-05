@@ -2,14 +2,18 @@ package org.jabref.gui.citationkeypattern;
 
 import org.jabref.gui.DialogService;
 import org.jabref.logic.citationkeypattern.CitationKeyGeneratorTestUtils;
+import org.jabref.logic.citationkeypattern.CitationKeyPatternPreferences;
 import org.jabref.logic.preferences.CliPreferences;
 import org.jabref.model.database.BibDatabaseContext;
 import org.jabref.model.entry.BibEntry;
 import org.jabref.model.entry.field.StandardField;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import javax.swing.undo.UndoManager;
 
@@ -17,18 +21,29 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
 public class GenerateCitationKeySingleActionTest {
-
-    @Mock
     private DialogService dialogService;
-
-    @Mock
     private CliPreferences preferences;
-
-    @Mock
     private UndoManager undoManager;
 
+    @BeforeEach
+    void setUp() {
+        dialogService = mock(DialogService.class);
+        preferences = mock(CliPreferences.class);
+        undoManager = mock(UndoManager.class);
+
+        CitationKeyPatternPreferences prefs = new CitationKeyPatternPreferences(
+                false, // transliterate
+                false, // avoid overwrite
+                false, // warn before overwrite
+                false, // generate before saving
+                CitationKeyPatternPreferences.KeySuffix.ALWAYS,
+                "", "", "", null,
+                "default",
+                ','
+        );
+        when(preferences.getCitationKeyPatternPreferences()).thenReturn(prefs);
+    }
     @Test
     public void execute_entryWithoutKey_addsUndo() {
         BibEntry entry = new BibEntry();
