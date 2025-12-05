@@ -5,6 +5,8 @@ open module org.jabref {
 
     // Swing
     requires java.desktop;
+    requires javafx.swing;
+
 
     // SQL
     requires java.sql;
