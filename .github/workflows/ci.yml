@@ -28,6 +28,8 @@ jobs:
 
       - name: Build (assemble + tests)
         run: ./gradlew build --no-daemon --info
+        env:
+          JAVA_OPTS: "-Djava.awt.headless=true -Dheadless=true"
 
       - name: Upload build artifacts (optional)
         if: success()

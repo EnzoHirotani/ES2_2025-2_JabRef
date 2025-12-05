@@ -324,6 +324,7 @@ jobs:
         run: xvfb-run --auto-servernum ./gradlew :${{ matrix.module }}:check -x checkstyleJmh -x checkstyleMain -x checkstyleTest -x modernizer
         env:
           CI: "true"
+          JAVA_OPTS: "-Djava.awt.headless=true -Dheadless=true -Dtestfx.headless=true -Dprism.order=sw"
       - name: Prepare format failed test results
         if: failure()
         uses: awalsh128/cache-apt-pkgs-action@latest
@@ -373,6 +374,7 @@ jobs:
         run: ./gradlew :${{ matrix.module }}:check -x checkstyleJmh -x checkstyleMain -x checkstyleTest -x modernizer
         env:
           CI: "true"
+          JAVA_OPTS: "-Djava.awt.headless=true -Dheadless=true"
 
   databasetests:
     if: (github.repository_owner == 'JabRef')
@@ -704,6 +706,7 @@ jobs:
           CI: "true"
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           DBMS: "postgresql"
+          JAVA_OPTS: "-Djava.awt.headless=true -Dheadless=true -Dtestfx.headless=true -Dprism.order=sw"
       - uses: codecov/codecov-action@v5
         if: (github.ref == 'refs/heads/main') && (steps.checksecrets.outputs.secretspresent == 'YES')
         with:

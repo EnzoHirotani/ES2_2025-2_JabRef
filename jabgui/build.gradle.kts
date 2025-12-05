@@ -234,9 +234,21 @@ tasks.test {
 
         "--add-opens", "java.base/jdk.internal.ref=org.apache.pdfbox.io",
         "--add-opens", "java.base/java.nio=org.apache.pdfbox.io",
-        "--enable-native-access=javafx.graphics,javafx.web,com.sun.jna"
+        "--enable-native-access=javafx.graphics,javafx.web,com.sun.jna",
+
+        // Headless mode for CI environments
+        "-Djava.awt.headless=true",
+        "-Dheadless=true",
+        "-Dtestfx.headless=true",
+        "-Dprism.order=sw"
 
         // "--add-reads", "org.mockito=java.prefs",
         // "--add-reads", "org.jabref=wiremock"
     )
+    
+    // Set system properties for headless testing
+    systemProperty("java.awt.headless", "true")
+    systemProperty("headless", "true")
+    systemProperty("testfx.headless", "true")
+    systemProperty("prism.order", "sw")
 }
