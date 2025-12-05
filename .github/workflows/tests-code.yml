@@ -287,11 +287,12 @@ jobs:
       - run: ./gradlew javadoc
 
   tests:
-    name: "Unit tests – ${{ matrix.module }}"
+    name: "Unit tests – ${{ matrix.module }} (Java ${{ matrix.java-version }})"
     runs-on: ubuntu-latest
     strategy:
       matrix:
         module: [jablib, jabkit, jabsrv, jabgui]
+        java-version: [17, 21, 24]
     steps:
       - name: Checkout source
         uses: actions/checkout@v6
@@ -301,7 +302,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
-          java-version: 24
+          java-version: ${{ matrix.java-version }}
           distribution: 'corretto'
           check-latest: true
       - name: Generate JBang cache key

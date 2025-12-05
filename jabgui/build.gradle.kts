@@ -109,6 +109,10 @@ dependencies {
     testImplementation("io.github.classgraph:classgraph")
     testImplementation("org.testfx:testfx-core")
     testImplementation("org.testfx:testfx-junit5")
+    // Monocle for headless JavaFX testing
+    // Version format: jdk-<javafx-version>
+    // Using jdk-21.0.2 as it's compatible with JavaFX 25 (Monocle versions are typically behind JavaFX)
+    testImplementation("org.testfx:openjfx-monocle:jdk-21.0.2")
 
     testImplementation("org.mockito:mockito-core")
     mockitoAgent("org.mockito:mockito-core:5.18.0") { isTransitive = false }
@@ -231,6 +235,11 @@ tasks.test {
 
         // Source: https://github.com/TestFX/TestFX/issues/638#issuecomment-433744765
         "--add-opens", "javafx.graphics/com.sun.javafx.application=org.testfx",
+        // Monocle headless platform requires additional opens
+        "--add-opens", "javafx.graphics/com.sun.glass.ui=ALL-UNNAMED",
+        "--add-opens", "javafx.graphics/com.sun.javafx.util=ALL-UNNAMED",
+        "--add-opens", "javafx.base/com.sun.javafx.logging=ALL-UNNAMED",
+        "--add-opens", "javafx.graphics/com.sun.glass.ui.monocle=ALL-UNNAMED",
 
         "--add-opens", "java.base/jdk.internal.ref=org.apache.pdfbox.io",
         "--add-opens", "java.base/java.nio=org.apache.pdfbox.io",
@@ -240,7 +249,13 @@ tasks.test {
         "-Djava.awt.headless=true",
         "-Dheadless=true",
         "-Dtestfx.headless=true",
-        "-Dprism.order=sw"
+        "-Dtestfx.robot=glass",
+        "-Dprism.order=sw",
+        "-Dprism.text=t2k",
+        // Monocle headless platform for TestFX
+        "-Dglass.platform=Monocle",
+        "-Dmonocle.platform=Headless",
+        "-Djavafx.verbose=false"
 
         // "--add-reads", "org.mockito=java.prefs",
         // "--add-reads", "org.jabref=wiremock"
@@ -250,5 +265,11 @@ tasks.test {
     systemProperty("java.awt.headless", "true")
     systemProperty("headless", "true")
     systemProperty("testfx.headless", "true")
+    systemProperty("testfx.robot", "glass")
     systemProperty("prism.order", "sw")
+    systemProperty("prism.text", "t2k")
+    // Monocle headless platform for TestFX
+    systemProperty("glass.platform", "Monocle")
+    systemProperty("monocle.platform", "Headless")
+    systemProperty("javafx.verbose", "false")
 }
