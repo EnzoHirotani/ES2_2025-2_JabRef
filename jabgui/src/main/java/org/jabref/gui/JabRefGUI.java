@@ -146,7 +146,7 @@ public class JabRefGUI extends Application {
             setupProxy();
         } catch (Throwable throwable) {
             LOGGER.error("Error during initialization", throwable);
-            throw throwable;
+            throw new RuntimeException("Failed to initialize JabRef modules:", throwable);
         }
 
         FallbackExceptionHandler.installExceptionHandler((exception, thread) -> UiTaskExecutor.runInJavaFXThread(() -> {
