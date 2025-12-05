@@ -37,6 +37,7 @@ import org.jabref.model.entry.LinkedFile;
 import org.jabref.model.search.SearchFlags;
 import org.jabref.model.search.query.SearchResult;
 import org.jabref.model.search.query.SearchResults;
+import org.jabref.model.search.query.SearchQuery;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,42 +98,71 @@ public class FulltextSearchResultsTab extends EntryEditorTab {
     }
 
     private void updateSearch() {
-        stateManager.activeSearchQuery(SearchType.NORMAL_SEARCH).get().ifPresent(searchQuery -> {
-            SearchResults searchResults = searchQuery.getSearchResults();
-            if (searchResults != null && entry != null) {
-                Map<String, List<SearchResult>> searchResultsForEntry = searchResults.getFileSearchResultsForEntry(entry);
-                content.getChildren().clear();
-                if (searchResultsForEntry.isEmpty()) {
-                    content.getChildren().add(new Text(Localization.lang("No search matches.")));
-                } else {
-                    // Iterate through files with search hits
-                    for (Map.Entry<String, List<SearchResult>> iterator : searchResultsForEntry.entrySet()) {
-                        entry.getFiles().stream().filter(file -> file.getLink().equals(iterator.getKey())).findFirst().ifPresent(linkedFile -> {
-                            content.getChildren().addAll(createFileLink(linkedFile), lineSeparator());
-                            // Iterate through pages (within file) with search hits
-                            for (SearchResult searchResult : iterator.getValue()) {
-                                for (String resultTextHtml : searchResult.getContentResultStringsHtml()) {
-                                    content.getChildren().addAll(TooltipTextUtil.createTextsFromHtml(resultTextHtml.replace("</b> <b>", " ")));
-                                    content.getChildren().addAll(new Text(System.lineSeparator()), lineSeparator(0.8), createPageLink(linkedFile, searchResult.getPageNumber(), searchQuery.getSearchExpression()));
-                                }
-                                if (!searchResult.getAnnotationsResultStringsHtml().isEmpty()) {
-                                    Text annotationsText = new Text(System.lineSeparator() + Localization.lang("Found matches in annotations:") + System.lineSeparator() + System.lineSeparator());
-                                    annotationsText.setStyle("-fx-font-style: italic;");
-                                    content.getChildren().add(annotationsText);
+    stateManager.activeSearchQuery(SearchType.NORMAL_SEARCH)
+        .get()
+        .ifPresent(this::updateSearchContent);
+    
+    Platform.runLater(entryEditor::adaptVisibleTabs);
+}
 
-                                    for (String resultTextHtml : searchResult.getAnnotationsResultStringsHtml()) {
-                                        content.getChildren().addAll(TooltipTextUtil.createTextsFromHtml(resultTextHtml.replace("</b> <b>", " ")));
-                                        content.getChildren().addAll(new Text(System.lineSeparator()), lineSeparator(0.8), createPageLink(linkedFile, searchResult.getPageNumber(), searchQuery.getSearchExpression()));
-                                    }
-                                }
-                            }
-                        });
-                    }
-                }
-            }
-        });
-        Platform.runLater(entryEditor::adaptVisibleTabs);
+private void updateSearchContent(SearchQuery searchQuery) {
+    SearchResults searchResults = searchQuery.getSearchResults();
+    if (searchResults == null || entry == null) {
+        return;
     }
+
+    Map<String, List<SearchResult>> resultsByFile = searchResults.getFileSearchResultsForEntry(entry);
+    content.getChildren().clear();
+
+    if (resultsByFile.isEmpty()) {
+        content.getChildren().add(new Text(Localization.lang("No search matches.")));
+        return;
+    }
+
+    resultsByFile.forEach((fileLink, results) -> 
+        processFileHits(fileLink, results, searchQuery.getSearchExpression()));
+}
+
+private void processFileHits(String fileLink, List<SearchResult> results, String searchExpression) {
+    entry.getFiles().stream()
+        .filter(file -> file.getLink().equals(fileLink))
+        .findFirst()
+        .ifPresent(linkedFile -> appendFileNodes(linkedFile, results, searchExpression));
+}
+
+private void appendFileNodes(LinkedFile linkedFile, List<SearchResult> results, String searchExpression) {
+    content.getChildren().addAll(createFileLink(linkedFile), lineSeparator());
+
+    for (SearchResult result : results) {
+        for (String html : result.getContentResultStringsHtml()) {
+            appendHitNode(html, linkedFile, result.getPageNumber(), searchExpression);
+        }
+
+        if (!result.getAnnotationsResultStringsHtml().isEmpty()) {
+            appendAnnotationHeader();
+            for (String html : result.getAnnotationsResultStringsHtml()) {
+                appendHitNode(html, linkedFile, result.getPageNumber(), searchExpression);
+            }
+        }
+    }
+}
+
+private void appendAnnotationHeader() {
+    Text annotationsText = new Text(System.lineSeparator() 
+        + Localization.lang("Found matches in annotations:") 
+        + System.lineSeparator() + System.lineSeparator());
+    annotationsText.setStyle("-fx-font-style: italic;");
+    content.getChildren().add(annotationsText);
+}
+
+private void appendHitNode(String resultHtml, LinkedFile linkedFile, int pageNumber, String searchExpression) {
+    content.getChildren().addAll(TooltipTextUtil.createTextsFromHtml(resultHtml.replace("</b> <b>", " ")));
+    content.getChildren().addAll(
+        new Text(System.lineSeparator()), 
+        lineSeparator(0.8), 
+        createPageLink(linkedFile, pageNumber, searchExpression)
+    );
+}
 
     private Text createFileLink(LinkedFile linkedFile) {
         Text fileLinkText = new Text(Localization.lang("Found match in %0", linkedFile.getLink()) + System.lineSeparator() + System.lineSeparator());
